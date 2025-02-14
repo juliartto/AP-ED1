@@ -319,6 +319,14 @@ void rotacaoSimplesDireita(_NoArvore **no) {
 // CALCULO IDADE
 int calcularIdade(_Data nascimento) {
 
+    // Verifica se a data é válida
+    if (nascimento.dia < 1 || nascimento.dia > 31 ||
+        nascimento.mes < 1 || nascimento.mes > 12 ||
+        nascimento.ano < 1900 || nascimento.ano > 2100) {
+        printf("Erro: Data de nascimento inválida.\n");
+        return -1;
+    }
+
     // Obtém a data atual
     time_t t = time(NULL);
     struct tm dataAtual = *localtime(&t);
@@ -355,10 +363,18 @@ int calcularIdade(_Data nascimento) {
     }
 
     return idade;
-
+    
 }
 
 int calcularDias(_Data ultimaConsulta) {
+
+    // Verifica se a data é válida
+    if (ultimaConsulta.dia < 1 || ultimaConsulta.dia > 31 ||
+        ultimaConsulta.mes < 1 || ultimaConsulta.mes > 12 ||
+        ultimaConsulta.ano < 1900 || ultimaConsulta.ano > 2100) {
+        printf("Erro: Data da última consulta inválida.\n");
+        return -1;
+    }
 
     // Inicia os structs "vazios"
     struct tm dataAtual = {0}, dataUltima = {0};
@@ -407,16 +423,19 @@ void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
     do {
         LER_DATA("Digite a data de nascimento (DD/MM/AAAA):\n", p->nascimento);
         p->idade = calcularIdade(p->nascimento);
+        while (getchar() != '\n');
     } while (p->idade == -1);
     
     printf("Digite o sexo (M/F): ");
     while (p->sexo != 'M' && p->sexo != 'F') {
         scanf(" %c", &p->sexo);
+        while (getchar() != '\n');
     }
 
     do {
         LER_DATA("Digite a data da última consulta (DD/MM/AAAA): \n", p->ultimaConsulta);
         p->diasUltCon = calcularDias(p->ultimaConsulta);
+        while (getchar() != '\n');
     } while (p->diasUltCon == -1);
 
     if (p->sexo == 'F') {
@@ -430,7 +449,12 @@ void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
 
 }
 
-void pesquisarLista(char *nomePaciente, _ListaDupla *lista) {
+void pesquisarLista(_ListaDupla *lista) {
+
+    char nomePaciente[128];
+    printf("Digite o nome do paciente para consulta: ");
+    fgets(nomePaciente, sizeof(nomePaciente), stdin);
+    nomePaciente[strcspn(nomePaciente, "\n")] = '\0';
 
     _NoLista *atual = lista->inicio;
 
@@ -449,12 +473,12 @@ void pesquisarLista(char *nomePaciente, _ListaDupla *lista) {
     return;
 }
 
-void pesquisarPaciente(char *nomePaciente, char sexoPaciente, _NoArvore **no, _ListaDupla *lista) {
+void pesquisarPaciente(char sexoPaciente, _NoArvore **no, _ListaDupla *lista) {
 
     if (sexoPaciente == 'M') {
-        pesquisarLista(nomePaciente, lista);
+        pesquisarLista(lista);
     } else if (sexoPaciente == 'F') {
-        // pesquisarArvore(nomePaciente, no);
+        // pesquisarArvore(no);
     }
 
 }
@@ -505,6 +529,7 @@ void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
     }
 
 }
+
 // MENU -----------------------------------------
 #define ANSIcorVermelho  "\x1b[31m"
 #define ANSIcorVerde     "\x1b[32m"
@@ -527,85 +552,137 @@ void aguardarEnter() {
     getchar();
 }
 
-int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
+// Altera apenas dentro da lista
+void alteraCadastroLista(_ListaDupla *lista) {
 
-    int opcao = 0;
+    limparTela();
+    
+    char nomePaciente[128];
+    printf("%sDigite o nome do paciente para alterar o cadastro: %s", ANSIcorAzul, ANSIcorReset);
+    fgets(nomePaciente, sizeof(nomePaciente), stdin);
+    nomePaciente[strcspn(nomePaciente, "\n")] = '\0'; // Remove a quebra de linha
 
-    do {
+    _NoLista *atual = lista->inicio;
+    
+    while (atual != NULL) {
 
-        limparTela();
-        printf("%s========================================\n", ANSIcorCiano);
-        printf("               MENU PRINCIPAL            \n");
-        printf("========================================%s\n", ANSIcorReset);
-        printf("%s1.%s Adicionar novo paciente\n", ANSIcorVerde, ANSIcorReset);
-        printf("%s2.%s Pesquisar paciente por nome\n", ANSIcorVerde, ANSIcorReset);
-        printf("%s3.%s Encerrar e gerar arquivos de saída\n", ANSIcorVerde, ANSIcorReset);
-        printf("%s========================================\n", ANSIcorCiano);
-
-        printf("Escolha uma opção: %s", ANSIcorMagenta);
-        scanf("%d", &opcao);
-        printf(ANSIcorReset);
-
-        while(getchar() != '\n'); // Limpar buffer
-
-        switch(opcao) {
-
-            case 1: {
-
+        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0 && atual->p->sexo == 'M') {
+            int opcao;
+            do {
                 limparTela();
-                printf("%sAdicionando um novo paciente...%s\n", ANSIcorAzul, ANSIcorReset);
+                printf("%sAlterar Cadastro:%s\n", ANSIcorCiano, ANSIcorReset);
+                printf("1 - Nome\n2 - Data de nascimento\n3 - Última consulta\n4 - Voltar\n");
+                printf("Escolha uma opção: ");
+                scanf("%d", &opcao);
+                while (getchar() != '\n'); // Limpa buffer
 
-                adicionarPaciente(arquivo, no, lista); // Função que adiciona um paciente na base de dados
+                switch (opcao) {
+                    case 1:
+                        printf("Novo nome: ");
+                        fgets(atual->p->nome, sizeof(atual->p->nome), stdin);
+                        atual->p->nome[strcspn(atual->p->nome, "\n")] = '\0';
+                        break;
+                    case 2:
+                    
+                        do {
+                            printf("Nova data de nascimento (DD/MM/AAAA): ");
+                            scanf("%d/%d/%d", &atual->p->nascimento.dia, &atual->p->nascimento.mes, &atual->p->nascimento.ano);
+                            atual->p->idade = calcularIdade(atual->p->nascimento);
+                        } while (atual->p->idade == -1);
+                        
+                        while (getchar() != '\n');
+                        break;
+                    case 3:
 
-                printf("%sPaciente adicionado com sucesso!%s\n", ANSIcorVerde, ANSIcorReset);
-                aguardarEnter();
-                break;
-
-            }
-
-            case 2: {
-
-                limparTela();
-                char nomePaciente[128];
-                char sexoPaciente;
-            
-                // Solicita o nome do paciente
-                printf("%sDigite o nome do paciente: %s", ANSIcorAzul, ANSIcorReset);
-                fgets(nomePaciente, sizeof(nomePaciente), stdin);
-                nomePaciente[strcspn(nomePaciente, "\n")] = '\0'; // Remove a quebra de linha
-            
-                // Solicita o sexo do paciente e valida a entrada
-                do {
-                    printf("%sDigite o sexo do paciente (M/F): %s", ANSIcorAzul, ANSIcorReset);
-                    scanf(" %c", &sexoPaciente); 
-                    while (getchar() != '\n');
-                } while (sexoPaciente != 'M' && sexoPaciente != 'F');
-            
-                // Pesquisa na lista ou AVL, dependendo do sexo
-                pesquisarPaciente(nomePaciente, sexoPaciente, no, lista);
-            
-                aguardarEnter();
-                break;
-            }
-
-            case 3:
-
-                printf("%sEncerrando o programa e gerando arquivos de saída...%s\n", ANSIcorMagenta, ANSIcorReset);
-                // Gera os arquivos de saída para cada especialista
-                geraRelatorioAndre(lista);
-                // geraRelatorioLiz(no); // julia
-                return EXIT_SUCCESS;
-
-            default:
-
-                printf("%sOpção inválida. Tente novamente.%s\n", ANSIcorVermelho, ANSIcorReset);
-                aguardarEnter();
-                break;
-
+                        do {
+                            printf("Nova data da última consulta (DD/MM/AAAA): ");
+                            scanf("%d/%d/%d", &atual->p->ultimaConsulta.dia, &atual->p->ultimaConsulta.mes, &atual->p->ultimaConsulta.ano);
+                            atual->p->diasUltCon = calcularDias(atual->p->ultimaConsulta);
+                        } while (atual->p->diasUltCon == -1);
+                        
+                        while (getchar() != '\n');
+                        break;
+                    case 4:
+                        break;
+                    default:
+                        printf("%sOpção inválida!%s\n", ANSIcorVermelho, ANSIcorReset);
+                        aguardarEnter();
+                }
+            } while (opcao != 4);
+            return;
         }
 
-    } while(opcao != 3);
+        atual = atual->prox;
 
+    }
+
+    printf("%sPaciente não encontrado.%s\n", ANSIcorVermelho, ANSIcorReset);
+    aguardarEnter();
+
+}
+
+int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
+
+    int opcao;
+    do {
+        limparTela();
+        printf("%sMenu Inicial:%s\n", ANSIcorCiano, ANSIcorReset);
+        printf("1 - Pacientes da Liz\n");
+        printf("2 - Pacientes do Moises\n");
+        printf("3 - Gerar relatórios e sair do sistema\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+        while (getchar() != '\n');
+
+        switch (opcao) {
+            case 1:
+            case 2: {
+                int subOpcao;
+                do {
+                    limparTela();
+                    printf("%sMenu Pacientes:%s\n", ANSIcorCiano, ANSIcorReset);
+                    printf("1 - Consultar paciente\n");
+                    printf("2 - Cadastrar paciente\n");
+                    printf("3 - Alterar cadastro\n");
+                    printf("4 - Voltar ao menu inicial\n");
+                    printf("Escolha uma opção: ");
+                    scanf("%d", &subOpcao);
+                    while (getchar() != '\n');
+
+                    switch (subOpcao) {
+                        case 1:
+                            limparTela();
+                            pesquisarLista(lista);
+                            aguardarEnter();
+                            break;
+                        case 2:
+                            limparTela();
+                            adicionarPaciente(arquivo,  no, lista);
+                            aguardarEnter();
+                            break;
+                        case 3:
+                            alteraCadastroLista(lista);
+                            aguardarEnter();
+                            break;
+                        case 4:
+                            break;
+                        default:
+                            printf("%sOpção inválida!%s\n", ANSIcorVermelho, ANSIcorReset);
+                            aguardarEnter();
+                    }
+                } while (subOpcao != 4);
+                break;
+            }
+            case 3:
+                printf("%sGerando relatórios...%s\n", ANSIcorAmarelo, ANSIcorReset);
+                printf("%sEncerrando o programa...%s\n", ANSIcorMagenta, ANSIcorReset);
+                geraRelatorioAndre(lista);
+                return EXIT_SUCCESS;
+            default:
+                printf("%sOpção inválida!%s\n", ANSIcorVermelho, ANSIcorReset);
+                aguardarEnter();
+        }
+    } while (opcao != 3);
 }
 
 // MAIN -----------------------------------------
