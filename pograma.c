@@ -629,9 +629,9 @@ void alteraCadastroLista(_ListaDupla *lista) {
 
 }
 
-int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
-
+int menu(_NoArvore **no, _ListaDupla *lista) {
     int opcao;
+
     do {
         limparTela();
         printf("%sMenu Inicial:%s\n", ANSIcorCiano, ANSIcorReset);
@@ -639,8 +639,15 @@ int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
         printf("2 - Pacientes do Moises\n");
         printf("3 - Gerar relatórios e sair do sistema\n");
         printf("Escolha uma opção: ");
-        scanf("%d", &opcao);
-        while (getchar() != '\n');
+        
+        if (scanf("%d", &opcao) != 1) {  // Verifica se a entrada foi válida
+            printf("%sEntrada inválida! Digite um número válido.%s\n", ANSIcorVermelho, ANSIcorReset);
+            while (getchar() != '\n'); // Limpa buffer
+            aguardarEnter();
+            continue;
+        }
+
+        while (getchar() != '\n'); // Limpa buffer
 
         switch (opcao) {
             case 1:
@@ -654,8 +661,15 @@ int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
                     printf("3 - Alterar cadastro\n");
                     printf("4 - Voltar ao menu inicial\n");
                     printf("Escolha uma opção: ");
-                    scanf("%d", &subOpcao);
-                    while (getchar() != '\n');
+                    
+                    if (scanf("%d", &subOpcao) != 1) {  // Verifica se a entrada foi válida
+                        printf("%sEntrada inválida! Digite um número válido.%s\n", ANSIcorVermelho, ANSIcorReset);
+                        while (getchar() != '\n'); // Limpa buffer
+                        aguardarEnter();
+                        continue;
+                    }
+
+                    while (getchar() != '\n'); // Limpa buffer
 
                     switch (subOpcao) {
                         case 1:
@@ -691,6 +705,9 @@ int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
                 aguardarEnter();
         }
     } while (opcao != 3);
+
+    return EXIT_SUCCESS; 
+
 }
 
 // MAIN -----------------------------------------
@@ -719,7 +736,7 @@ int main(int argc, char *argv[]) {
     // separa os dados de cada paciente e insere na estrutura correta
     separaDados(arquivo, &raiz, &lista);
 
-    menu(arquivo, &raiz, &lista);
+    menu(&raiz, &lista);
 
     fclose(arquivo);
     
