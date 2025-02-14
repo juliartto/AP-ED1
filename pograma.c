@@ -608,8 +608,6 @@ int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
 
 }
 
-
-
 // MAIN -----------------------------------------
 int main(int argc, char *argv[]) {
 
