@@ -42,5 +42,3 @@
 <Roberto Chives, M, 05/03/1990, 11/11/2021>
 <Miranda Maria Aniz, F, 18/09/1991, 30/08/2023>
 <André Ricardo, M, 28/09/1990, 30/01/2025>
-
-<Putinho da Silva, M, 01/01/2001, 02/02/2025>

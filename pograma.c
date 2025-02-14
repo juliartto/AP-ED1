@@ -423,7 +423,7 @@ int calcularDias(_Data nascimento, _Data ultimaConsulta) {
 
 
 // ADICIONAR NOVO PACIENTE ----------------------
-void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
+void adicionarPaciente(_NoArvore **no, _ListaDupla *lista) {
 
     _Paciente *p = (_Paciente *) malloc(sizeof(_Paciente));
 
@@ -454,9 +454,6 @@ void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
     } else if (p->sexo == 'M') {
         insereLista(lista, p);
     }  
-
-    fprintf(arquivo, "<%s, %c, %02d/%02d/%d, %02d/%02d/%d>\n", p->nome, p->sexo, p->nascimento.dia, p->nascimento.mes, p->nascimento.ano,
-            p->ultimaConsulta.dia, p->ultimaConsulta.mes, p->ultimaConsulta.ano);
 
 }
 
@@ -668,7 +665,7 @@ int menu(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
                             break;
                         case 2:
                             limparTela();
-                            adicionarPaciente(arquivo,  no, lista);
+                            adicionarPaciente(no, lista);
                             aguardarEnter();
                             break;
                         case 3:
