@@ -366,9 +366,9 @@ int calcularIdade(_Data nascimento) {
     
 }
 
-int calcularDias(_Data ultimaConsulta) {
+int calcularDias(_Data nascimento, _Data ultimaConsulta) {
 
-    // Verifica se a data é válida
+    // verificacao de validade
     if (ultimaConsulta.dia < 1 || ultimaConsulta.dia > 31 ||
         ultimaConsulta.mes < 1 || ultimaConsulta.mes > 12 ||
         ultimaConsulta.ano < 1900 || ultimaConsulta.ano > 2100) {
@@ -376,31 +376,42 @@ int calcularDias(_Data ultimaConsulta) {
         return -1;
     }
 
-    // Inicia os structs "vazios"
-    struct tm dataAtual = {0}, dataUltima = {0};
+    if (nascimento.dia < 1 || nascimento.dia > 31 ||
+        nascimento.mes < 1 || nascimento.mes > 12 ||
+        nascimento.ano < 1900 || nascimento.ano > 2100) {
+        printf("Erro: Data de nascimento inválida.\n");
+        return -1;
+    }
 
-    // Obtém a data atual
+    struct tm dataAtual = {0}, dataUltima = {0}, dataNascimento = {0};
+
     time_t t = time(NULL);
     localtime_r(&t, &dataAtual);
 
-    // Configura a estrutura da data da última consulta
     dataUltima.tm_mday = ultimaConsulta.dia;
-    dataUltima.tm_mon = ultimaConsulta.mes - 1;  // tm_mon vai de 0 a 11
-    dataUltima.tm_year = ultimaConsulta.ano - 1900; // tm_year começa desde 1900
+    dataUltima.tm_mon = ultimaConsulta.mes - 1;  
+    dataUltima.tm_year = ultimaConsulta.ano - 1900;
 
-    // Converte ambas as datas para time_t (segundos desde a epoch)
+    dataNascimento.tm_mday = nascimento.dia;
+    dataNascimento.tm_mon = nascimento.mes - 1;
+    dataNascimento.tm_year = nascimento.ano - 1900;
+
     time_t timeAtual = mktime(&dataAtual);
     time_t timeUltima = mktime(&dataUltima);
+    time_t timeNascimento = mktime(&dataNascimento);
 
-    // Verifica se houve erro na conversão
-    if (timeUltima == -1 || timeAtual == -1) {
+    if (timeUltima == -1 || timeAtual == -1 || timeNascimento == -1) {
         printf("Erro ao converter datas para time_t.\n");
         return -1;
     }
 
-    // Verifica se a data da última consulta é posterior à data atual
     if (timeUltima > timeAtual) {
         printf("Erro: A data da última consulta não pode ser posterior à data atual.\n");
+        return -1;
+    }
+
+    if (timeUltima < timeNascimento) {
+        printf("Erro: A data da última consulta não pode ser anterior à data de nascimento.\n");
         return -1;
     }
 
@@ -408,8 +419,8 @@ int calcularDias(_Data ultimaConsulta) {
     double diferenca = difftime(timeAtual, timeUltima) / (60 * 60 * 24);
 
     return (int) diferenca;
-
 }
+
 
 // ADICIONAR NOVO PACIENTE ----------------------
 void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
@@ -434,7 +445,7 @@ void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
 
     do {
         LER_DATA("Digite a data da última consulta (DD/MM/AAAA): \n", p->ultimaConsulta);
-        p->diasUltCon = calcularDias(p->ultimaConsulta);
+        p->diasUltCon = calcularDias(p->nascimento, p->ultimaConsulta);
         while (getchar() != '\n');
     } while (p->diasUltCon == -1);
 
@@ -517,7 +528,7 @@ void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
            &p->ultimaConsulta.dia, &p->ultimaConsulta.mes, &p->ultimaConsulta.ano);
         
         p->idade = calcularIdade(p->nascimento);
-        p->diasUltCon = calcularDias(p->ultimaConsulta);
+        p->diasUltCon = calcularDias(p->nascimento, p->ultimaConsulta);
 
         // pacientes mulheres são colocadas na AVL
         if (p->sexo == 'F') {
@@ -597,7 +608,7 @@ void alteraCadastroLista(_ListaDupla *lista) {
                         do {
                             printf("Nova data da última consulta (DD/MM/AAAA): ");
                             scanf("%d/%d/%d", &atual->p->ultimaConsulta.dia, &atual->p->ultimaConsulta.mes, &atual->p->ultimaConsulta.ano);
-                            atual->p->diasUltCon = calcularDias(atual->p->ultimaConsulta);
+                            atual->p->diasUltCon = calcularDias(atual->p->nascimento, atual->p->ultimaConsulta);
                         } while (atual->p->diasUltCon == -1);
                         
                         while (getchar() != '\n');
