@@ -395,7 +395,6 @@ int calcularDias(_Data ultimaConsulta) {
 
 }
 
-// nao esquecer de adicionar no .txt tbm, meter um fprintf, mudanca precisa ser persistente. ass: paludeto
 // ADICIONAR NOVO PACIENTE ----------------------
 void adicionarPaciente(FILE *arquivo, _NoArvore **no, _ListaDupla *lista) {
 
