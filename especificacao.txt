@@ -1,0 +1,33 @@
+Moisés e Liz são um casal de dentistas. 
+Eles decidiram organizar as informações de seus pacientes, pois, atualmente, os dados dos pacientes estão todos armazenados em um único arquivo, sem qualquer organização alfabética ou por gênero.
+
+Liz atende apenas pacientes do sexo feminino, enquanto Moisés atende pacientes do sexo masculino.
+
+O casal de dentistas contratou você para desenvolver um sistema de organização. 
+No entanto, como o melhor amigo de Liz é estudante de Computação, ele sugeriu que as melhores estruturas de dados a serem utilizadas seriam Árvore AVL e Lista Duplamente Encadeada. 
+Liz gostou da ideia de organizar suas pacientes utilizando uma Árvore AVL, armazenando-as em ordem alfabética crescente (A-Z) pelo nome. 
+Já Moisés prefere que seus pacientes sejam organizados em uma Lista Duplamente Encadeada, mas em ordem alfabética decrescente (Z-A).
+
+Sua tarefa é implementar um programa que organize as informações dos pacientes, que estão armazenadas no arquivo pacientes.txt no seguinte formato:
+
+<nome, sexo, nascimento, última consulta>
+
+Por exemplo:
+
+Joaquim Marques é um paciente do sexo masculino (M), nascido em 18/11/1980, cuja última consulta com Moisés foi em 02/03/2022. 
+Já Liana Carvalho Lima é do sexo feminino (F), nasceu em 20/02/1984 e sua última consulta com Liz foi em 18/05/2021:
+
+<Joaquim Marques, M, 18/11/1980, 02/03/2022>
+<Liana Carvalho Lima, F, 20/02/1984, 18/05/2021>
+
+Exemplo do arquivo pacientes.txt:
+Link para download: https://drive.google.com/file/d/1xjKz0uoVn5PALtHrNbl850QsJkwzkx9f/view?usp=sharing
+Funcionalidades do programa
+
+O sistema deve oferecer três opções:
+
+    Adicionar um novo paciente que não está contido na base de dados antiga.
+    Realizar a pesquisa por nome, retornando a idade do paciente e há quantos dias ocorreu a última consulta. (Considere anos com 365 dias, ou seja, não é necessário adicionar um dia para anos bissextos).
+    Encerrar a execução do programa, gerando dois arquivos de saída, um para cada especialista, contendo os pacientes organizados conforme especificado.
+
+Observação: O programa deve utilizar argc e argv para a leitura do arquivo .csv.
