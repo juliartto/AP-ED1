@@ -5,17 +5,21 @@
 #include <time.h>
 #include <ctype.h>
 
-// MACROS ---------------------------------------
+// MACROS =======================================
 // Macro LER_DATA, evita repetição desnecessária na leitura de datas no formato DD/MM/AAAA
 #define LER_DATA(mensagem, data) do { \
     printf(mensagem); \
     scanf("%d/%d/%d", &data.dia, &data.mes, &data.ano); \
 } while (0)
 
-// Colocar os headers aqui depois seria bom (ass paludeto)
+
+// HEADERS ======================================
 bool ordemNome(char *source,  const char *novo);
 
-// ESTRUTURAS -----------------------------------
+// FIM HEADERS ==================================
+
+
+// ESTRUTURAS ===================================
 // struct de datas
 typedef struct _Data {
     int dia;
@@ -32,7 +36,14 @@ typedef struct {
     _Data ultimaConsulta;
 } _Paciente;
 
-// LISTA DUPLAMENTE ENCADEADA -------------------
+// struct de cada nó da AVL
+typedef struct _NoArvore {
+    _Paciente paciente;
+    struct _NoArvore *noEsquerdo;
+    struct _NoArvore *noDireito;
+    int altura;
+} _NoArvore;
+
 typedef struct _NoLista {
     _Paciente *p;
     struct _NoLista *prox;
@@ -44,7 +55,10 @@ typedef struct _ListaDupla {
     _NoLista *fim;
     int qtdeElementos; 
 } _ListaDupla;
+//  FIM DAS ESTRUTURAS ==========================
 
+
+// LISTA DUPLAMENTE ENCADEADA ===================
 bool listaVazia(_ListaDupla *lista) {
 
     return lista->qtdeElementos == 0;
@@ -137,7 +151,33 @@ void imprimeLista(FILE *arquivo, _ListaDupla *lista) {
 
 }
 
-// Retorna se o NOVO nome vem ANTES da SOURCE (usa isso julia)
+
+void pesquisarLista(_ListaDupla *lista) {
+
+    char nomePaciente[128];
+    printf("Digite o nome do paciente para consulta: ");
+    fgets(nomePaciente, sizeof(nomePaciente), stdin);
+    nomePaciente[strcspn(nomePaciente, "\n")] = '\0';
+
+    _NoLista *atual = lista->inicio;
+
+    while (atual != NULL) {
+
+        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0) {
+            printf("%s, %d anos de idade, %d dias desde última consulta\n", atual->p->nome, atual->p->idade, atual->p->diasUltCon);
+            return;
+        }
+
+        atual = atual->prox;
+    }
+
+    printf("Paciente não encontrado\n");
+
+    return;
+}
+// FIM DAS OPERAÇÕES DA LISTA =============================
+
+// Retorna se o NOVO nome vem ANTES da SOURCE
 bool ordemNome(char *source,  const char *novo) {
 
     int i = 0;
@@ -162,15 +202,7 @@ bool ordemNome(char *source,  const char *novo) {
     return strlen(source) > strlen(novo);
 
 }
-// ==============================================
 
-// struct de cada nó da AVL
-typedef struct _NoArvore {
-    _Paciente paciente;
-    struct _NoArvore *noEsquerdo;
-    struct _NoArvore *noDireito;
-    int altura;
-} _NoArvore;
 
 // OPERAÇÕES AVL ================================
 // INICIAR --------------------------------------
@@ -245,76 +277,116 @@ void rotacaoSimplesDireita(_NoArvore **no) {
 
 }
 
-// dps vc termina aqui, deixei comentado pro programa compilar. ass: paludeto
-
 // INSERIR PACIENTES NA AVL ---------------------
-// void inserirAVL(_NoArvore **no, _Paciente paciente){
+void inserirAVL(_NoArvore **no, _Paciente *paciente){
 
-//     // cria a raíz da árvore caso ela esteja vazia
-//     if (estaVazia(no))
-//     {
-//         (*no) = (_NoArvore*) malloc(sizeof(_NoArvore));
-//         if ((*no) == NULL)
-//         {
-//             perror("Não foi possível alocar memória.\n");
-//             return;
-//         }
+    // cria a raíz da árvore caso ela esteja vazia
+    if (estaVazia(no))
+    {
+        (*no) = (_NoArvore*) malloc(sizeof(_NoArvore));
+        if ((*no) == NULL)
+        {
+            perror("Não foi possível alocar memória.\n");
+            return;
+        }
 
-//         (*no)->noDireito = (*no)->noEsquerdo = NULL;
-//         (*no)->paciente.nascimento = paciente.nascimento;
-//         (*no)->altura = 0;
-//     }
-    
-//     // eh por ordem alfabetica, tem que checar os valores ascii, ass: paludeto
-//     // adicionar um novo nó
-//     // if ((*no)->paciente.nascimento > paciente.nascimento)
-//     // {
-//     //     inserir(&(*no)->noEsquerdo, paciente.nascimento);
-//     // }else {
-//     //     inserir(&(*no)->noDireito, paciente.nascimento);
-//     // }
+        (*no)->noDireito = (*no)->noEsquerdo = NULL;
+        (*no)->paciente = (*paciente);
+        (*no)->altura = 0;
+    }
 
-//     (*no)->altura = 1 + maxAlturaFilhos(no);
+    // adicionar um novo nó
+    if (ordemNome((*no)->paciente.nome, paciente->nome))
+    {
+        inserirAVL(&(*no)->noEsquerdo, paciente);
+    }else {
+        inserirAVL(&(*no)->noDireito, paciente);
+    }
 
-//     int fatorBalanceamento = CalcFatorBalanceamento(no);
+    (*no)->altura = 1 + maxAlturaFilhos(no);
 
-//     switch (fatorBalanceamento)
-//     {
-//     case 2: // rotação à esquerda
-//         int fbFilho = CalcFatorBalanceamento(&(*no)->noDireito);
+    int fatorBalanceamento = CalcFatorBalanceamento(no);
 
-//         switch (fbFilho)
-//         {
-//         case +1: // rotação simples à esquerda
-//             rotacaoSEsq(no);
-//             break;
-//         case -1: // rotação dupla à esquerda
-//             rotacaoSimplesDireita(&(*no)->noDireito);
-//             rotacaoSEsq(no);
-//             break;
-//         }
+    if (fatorBalanceamento > 1) { // Rotação para a esquerda
+        if (CalcFatorBalanceamento(&(*no)->noDireito) < 0) {
+            rotacaoSimplesDireita(&(*no)->noDireito);
+        }
+        rotacaoSEsq(no);
+    } else if (fatorBalanceamento < -1) { // Rotação para a direita
+        if (CalcFatorBalanceamento(&(*no)->noEsquerdo) > 0) {
+            rotacaoSEsq(&(*no)->noEsquerdo);
+        }
+        rotacaoSimplesDireita(no);
+    }
 
-//         break;
+   /* switch (fatorBalanceamento)
+    {
+    case 2: // rotação à esquerda
+        int fbFilho = CalcFatorBalanceamento(&(*no)->noDireito);
 
-//     case -2: // rotação à direita
-//         int fbFilho = CalcFatorBalanceamento(&(*no)->noEsquerdo);
+        switch (fbFilho)
+        {
+        case +1: // rotação simples à esquerda
+            rotacaoSEsq(no);
+            break;
+        case -1: // rotação dupla à esquerda
+            rotacaoSimplesDireita(&(*no)->noDireito);
+            rotacaoSEsq(no);
+            break;
+        }
 
-//         switch (fbFilho)
-//         {
-//         case -1: // rotação simples à direita
-//             rotacaoSimplesDireita(no);
-//             break;
+        break;
+
+    case -2: // rotação à direita
+        int fbFilho = CalcFatorBalanceamento(&(*no)->noEsquerdo);
+
+        switch (fbFilho)
+        {
+        case -1: // rotação simples à direita
+            rotacaoSimplesDireita(no);
+            break;
         
-//         case +1: // rotação dupla à direita
-//             rotacaoSEsq(&(*no)->noEsquerdo);
-//             rotacaoSimplesDireita(no);
-//             break;
-//         }
+        case +1: // rotação dupla à direita
+            rotacaoSEsq(&(*no)->noEsquerdo);
+            rotacaoSimplesDireita(no);
+            break;
+        }
 
-//         break;
-//     }
-// }
-// ==============================================
+        break;
+    }*/
+}
+
+// função para imprimir as pacientes em ordem alfabética
+void imprimirAVL(_NoArvore **no, FILE *pacientesLiz) {
+    if ((*no) != NULL) {
+        imprimirAVL(&(*no)->noEsquerdo, pacientesLiz);
+        fprintf(pacientesLiz, "<%s, %c, %02d/%02d/%d, %02d/%02d/%d>\n",
+            (*no)->paciente.nome, (*no)->paciente.sexo, 
+            (*no)->paciente.nascimento.dia, (*no)->paciente.nascimento.mes, (*no)->paciente.nascimento.ano, 
+            (*no)->paciente.ultimaConsulta.dia, (*no)->paciente.ultimaConsulta.mes, (*no)->paciente.ultimaConsulta.ano);
+        imprimirAVL(&(*no)->noDireito, pacientesLiz);
+    }
+}
+
+void pesquisarAVL(_NoArvore **no, _Paciente paciente) {
+    if (estaVazia(no))
+    {
+        printf("Elemento não encontrado.\n");
+        return;
+    }
+
+    /*if ((*no)->chave == chave)
+    {
+        printf("Elemento encontrado: %d\n", chave);
+    }else if ((*no)->chave > chave)
+    {
+        pesquisar(&(*no)->noEsquerdo, chave);
+    }else if ((*no)->chave < chave)
+    {
+        pesquisar(&(*no)->noDireito, chave);
+    }*/
+}
+// FIM DAS OPERAÇÕES AVL ========================
 
 // CALCULO IDADE
 int calcularIdade(_Data nascimento) {
@@ -450,43 +522,19 @@ void adicionarPaciente(_NoArvore **no, _ListaDupla *lista) {
     } while (p->diasUltCon == -1);
 
     if (p->sexo == 'F') {
-        //inserirAVL(no, paciente); julia eh com vc 
+        inserirAVL(no, p);
     } else if (p->sexo == 'M') {
         insereLista(lista, p);
     }  
 
 }
 
-void pesquisarLista(_ListaDupla *lista) {
-
-    char nomePaciente[128];
-    printf("Digite o nome do paciente para consulta: ");
-    fgets(nomePaciente, sizeof(nomePaciente), stdin);
-    nomePaciente[strcspn(nomePaciente, "\n")] = '\0';
-
-    _NoLista *atual = lista->inicio;
-
-    while (atual != NULL) {
-
-        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0) {
-            printf("%s, %d anos de idade, %d dias desde última consulta\n", atual->p->nome, atual->p->idade, atual->p->diasUltCon);
-            return;
-        }
-
-        atual = atual->prox;
-    }
-
-    printf("Paciente não encontrado\n");
-
-    return;
-}
-
-void pesquisarPaciente(char sexoPaciente, _NoArvore **no, _ListaDupla *lista) {
+void pesquisarPaciente(char sexoPaciente, _NoArvore **no, _ListaDupla *lista, _Paciente paciente) {
 
     if (sexoPaciente == 'M') {
         pesquisarLista(lista);
     } else if (sexoPaciente == 'F') {
-        // pesquisarArvore(no);
+        pesquisarAVL(no, paciente);
     }
 
 }
@@ -507,6 +555,24 @@ void geraRelatorioAndre(_ListaDupla *lista) {
     fclose(novoArquivo);
 
 }
+
+// GERA ARQUIVO DE PACIENTES DA LIZ -------------
+void arquivoPacientesLiz(_NoArvore **no) {
+
+    FILE *pacientesLiz;
+
+    pacientesLiz = fopen("PacientesLiz.txt", "w");
+
+    if (pacientesLiz == NULL) {
+        printf("Erro ao criar relatório\n");
+    }
+
+    imprimirAVL(no, pacientesLiz);
+    
+    fclose(pacientesLiz);
+
+}
+
 
 // SEPARANDO OS DADOS DOS PACIENTES (parse) -------------
 void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
@@ -529,7 +595,7 @@ void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
 
         // pacientes mulheres são colocadas na AVL
         if (p->sexo == 'F') {
-            // inserirAVL(no, p); julia
+            inserirAVL(no, p);
         } else if (p->sexo == 'M') {    // evita linhas vazias
             insereLista(lista, p);
         } 
@@ -538,7 +604,7 @@ void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
 
 }
 
-// MENU -----------------------------------------
+// MENU =========================================
 #define ANSIcorVermelho  "\x1b[31m"
 #define ANSIcorVerde     "\x1b[32m"
 #define ANSIcorAmarelo   "\x1b[33m"
@@ -710,7 +776,7 @@ int menu(_NoArvore **no, _ListaDupla *lista) {
 
 }
 
-// MAIN -----------------------------------------
+// MAIN =========================================
 int main(int argc, char *argv[]) {
 
     // verifica erro na passagem dos argumentos para a main
@@ -719,10 +785,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // inicia a árvore AVL
+    // inicia AVL e lista
     _NoArvore *raiz;
     _ListaDupla lista;
-
     iniciarAVL(&raiz);
     inicializaLista(&lista);
 
