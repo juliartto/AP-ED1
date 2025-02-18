@@ -21,9 +21,6 @@
     scanf("%d/%d/%d", &data.dia, &data.mes, &data.ano); \
 } while (0)
 
-bool ordemNome(char *source, const char *novo);
-
-
 /* ESTRUTURAS */
 
 typedef struct _Data {
@@ -59,6 +56,28 @@ typedef struct _ListaDupla {
     int qtdeElementos;
 } _ListaDupla;
 
+/* ORDEM DE NOME */
+
+bool ordemNome(char *source, const char *novo) {
+
+    int i = 0;
+
+    while (source[i] && novo[i]) {
+
+        char c1 = tolower(source[i]);
+        char c2 = tolower(novo[i]);
+
+        if (c1 != c2) {
+
+            return c1 > c2;
+        }
+        
+        i++;
+
+    }
+
+    return strlen(source) > strlen(novo);
+}
 
 /* LISTA DUPLAMENTE ENCADEADA */
 
@@ -171,31 +190,6 @@ void pesquisarLista(_ListaDupla *lista) {
 
     return;
 }
-
-
-/* ORDEM DE NOME */
-
-bool ordemNome(char *source, const char *novo) {
-
-    int i = 0;
-
-    while (source[i] && novo[i]) {
-
-        char c1 = tolower(source[i]);
-        char c2 = tolower(novo[i]);
-
-        if (c1 != c2) {
-
-            return c1 > c2;
-        }
-        
-        i++;
-
-    }
-
-    return strlen(source) > strlen(novo);
-}
-
 
 /* OPERAÇÕES AVL */
 
