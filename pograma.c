@@ -595,7 +595,7 @@ void separaDados(FILE *arquivo, _NoArvore **no, _ListaDupla *lista){
 
         // pacientes mulheres são colocadas na AVL
         if (p->sexo == 'F') {
-            inserirAVL(no, p);
+            // inserirAVL(no, p);
         } else if (p->sexo == 'M') {    // evita linhas vazias
             insereLista(lista, p);
         } 
@@ -626,7 +626,50 @@ void aguardarEnter() {
     getchar();
 }
 
-// Altera apenas dentro da lista
+// utilizado na alteracao de cadastro
+void removeLista(_ListaDupla *lista, const char *nomePaciente) {
+
+    if (lista == NULL || lista->inicio == NULL) {
+        printf("%sA lista está vazia.%s\n", ANSIcorVermelho, ANSIcorReset);
+        return;
+    }
+
+    _NoLista *atual = lista->inicio;
+
+    while (atual != NULL) {
+
+        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0) {
+            
+            // posicao do item na lista
+            if (atual->ant != NULL) {
+                atual->ant->prox = atual->prox;
+            } else {
+                lista->inicio = atual->prox;
+            }
+
+            if (atual->prox != NULL) {
+                atual->prox->ant = atual->ant;
+            } else {
+                lista->fim = atual->ant;
+            }
+            
+            // libera memoria do no e do paciente
+            free(atual->p);
+            free(atual);
+
+            printf("%sPaciente removido com sucesso.%s\n", ANSIcorVerde, ANSIcorReset);
+            return;
+
+        }
+
+        atual = atual->prox;
+    }
+
+    printf("%sPaciente não encontrado.%s\n", ANSIcorVermelho, ANSIcorReset);
+
+}
+
+// altera apenas dentro da lista
 void alteraCadastroLista(_ListaDupla *lista) {
 
     limparTela();
@@ -634,47 +677,58 @@ void alteraCadastroLista(_ListaDupla *lista) {
     char nomePaciente[128];
     printf("%sDigite o nome do paciente para alterar o cadastro: %s", ANSIcorAzul, ANSIcorReset);
     fgets(nomePaciente, sizeof(nomePaciente), stdin);
-    nomePaciente[strcspn(nomePaciente, "\n")] = '\0'; // Remove a quebra de linha
+    nomePaciente[strcspn(nomePaciente, "\n")] = '\0';
 
     _NoLista *atual = lista->inicio;
     
     while (atual != NULL) {
 
-        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0 && atual->p->sexo == 'M') {
+        if (atual->p != NULL && strcmp(atual->p->nome, nomePaciente) == 0) {
+
+            // cria uma cópia dos dados do paciente
+            _Paciente *novoPaciente = (_Paciente *)malloc(sizeof(_Paciente));
+            if (!novoPaciente) {
+                printf("%sErro de alocação de memória.%s\n", ANSIcorVermelho, ANSIcorReset);
+                return;
+            }
+
+            *novoPaciente = *(atual->p); // copia os dados do paciente
+
             int opcao;
+
             do {
+
                 limparTela();
                 printf("%sAlterar Cadastro:%s\n", ANSIcorCiano, ANSIcorReset);
                 printf("1 - Nome\n2 - Data de nascimento\n3 - Última consulta\n4 - Voltar\n");
                 printf("Escolha uma opção: ");
                 scanf("%d", &opcao);
-                while (getchar() != '\n'); // Limpa buffer
+                while (getchar() != '\n');
 
                 switch (opcao) {
                     case 1:
                         printf("Novo nome: ");
-                        fgets(atual->p->nome, sizeof(atual->p->nome), stdin);
-                        atual->p->nome[strcspn(atual->p->nome, "\n")] = '\0';
+                        fgets(novoPaciente->nome, sizeof(novoPaciente->nome), stdin);
+                        novoPaciente->nome[strcspn(novoPaciente->nome, "\n")] = '\0';
+
                         break;
                     case 2:
-                    
                         do {
                             printf("Nova data de nascimento (DD/MM/AAAA): ");
-                            scanf("%d/%d/%d", &atual->p->nascimento.dia, &atual->p->nascimento.mes, &atual->p->nascimento.ano);
-                            atual->p->idade = calcularIdade(atual->p->nascimento);
-                        } while (atual->p->idade == -1);
-                        
+                            scanf("%d/%d/%d", &novoPaciente->nascimento.dia, &novoPaciente->nascimento.mes, &novoPaciente->nascimento.ano);
+                            novoPaciente->idade = calcularIdade(novoPaciente->nascimento);
+                        } while (novoPaciente->idade == -1);
                         while (getchar() != '\n');
+
                         break;
                     case 3:
-
                         do {
                             printf("Nova data da última consulta (DD/MM/AAAA): ");
-                            scanf("%d/%d/%d", &atual->p->ultimaConsulta.dia, &atual->p->ultimaConsulta.mes, &atual->p->ultimaConsulta.ano);
-                            atual->p->diasUltCon = calcularDias(atual->p->nascimento, atual->p->ultimaConsulta);
-                        } while (atual->p->diasUltCon == -1);
-                        
+                            scanf("%d/%d/%d", &novoPaciente->ultimaConsulta.dia, &novoPaciente->ultimaConsulta.mes, &novoPaciente->ultimaConsulta.ano);
+                            novoPaciente->diasUltCon = calcularDias(novoPaciente->nascimento, novoPaciente->ultimaConsulta);
+                        } while (novoPaciente->diasUltCon == -1);
                         while (getchar() != '\n');
+
                         break;
                     case 4:
                         break;
@@ -682,12 +736,22 @@ void alteraCadastroLista(_ListaDupla *lista) {
                         printf("%sOpção inválida!%s\n", ANSIcorVermelho, ANSIcorReset);
                         aguardarEnter();
                 }
+
             } while (opcao != 4);
+
+            // remove o paciente antigo para adicionar o novo
+            removeLista(lista, nomePaciente);
+
+            // insere a cópia alterada na lista
+            insereLista(lista, novoPaciente);
+
+            printf("%sCadastro alterado com sucesso!%s\n", ANSIcorVerde, ANSIcorReset);
+
             return;
+
         }
 
         atual = atual->prox;
-
     }
 
     printf("%sPaciente não encontrado.%s\n", ANSIcorVermelho, ANSIcorReset);
@@ -696,9 +760,11 @@ void alteraCadastroLista(_ListaDupla *lista) {
 }
 
 int menu(_NoArvore **no, _ListaDupla *lista) {
+
     int opcao;
 
     do {
+
         limparTela();
         printf("%sMenu Inicial:%s\n", ANSIcorCiano, ANSIcorReset);
         printf("1 - Pacientes da Liz\n");
@@ -706,14 +772,14 @@ int menu(_NoArvore **no, _ListaDupla *lista) {
         printf("3 - Gerar relatórios e sair do sistema\n");
         printf("Escolha uma opção: ");
         
-        if (scanf("%d", &opcao) != 1) {  // Verifica se a entrada foi válida
+        if (scanf("%d", &opcao) != 1) {  
             printf("%sEntrada inválida! Digite um número válido.%s\n", ANSIcorVermelho, ANSIcorReset);
-            while (getchar() != '\n'); // Limpa buffer
+            while (getchar() != '\n'); 
             aguardarEnter();
             continue;
         }
 
-        while (getchar() != '\n'); // Limpa buffer
+        while (getchar() != '\n'); 
 
         switch (opcao) {
             case 1:
@@ -728,14 +794,14 @@ int menu(_NoArvore **no, _ListaDupla *lista) {
                     printf("4 - Voltar ao menu inicial\n");
                     printf("Escolha uma opção: ");
                     
-                    if (scanf("%d", &subOpcao) != 1) {  // Verifica se a entrada foi válida
+                    if (scanf("%d", &subOpcao) != 1) {  
                         printf("%sEntrada inválida! Digite um número válido.%s\n", ANSIcorVermelho, ANSIcorReset);
-                        while (getchar() != '\n'); // Limpa buffer
+                        while (getchar() != '\n'); 
                         aguardarEnter();
                         continue;
                     }
 
-                    while (getchar() != '\n'); // Limpa buffer
+                    while (getchar() != '\n'); 
 
                     switch (subOpcao) {
                         case 1:
